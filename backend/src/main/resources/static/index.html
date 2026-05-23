@@ -1,0 +1,982 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>VaultX — Secure Banking</title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+    <style>
+        :root {
+            --ink:       #0a0c0f;
+            --ink-muted: #4a5568;
+            --ink-faint: #a0aec0;
+            --surface:   #f7f6f3;
+            --panel:     #ffffff;
+            --border:    #e2e0da;
+            --gold:      #b8860b;
+            --gold-light:#d4a017;
+            --gold-pale: #faf3e0;
+            --danger:    #c0392b;
+            --success:   #1a6b3a;
+            --warning:   #b7791f;
+            --accent:    #1a3a5c;
+            --accent2:   #2d6a4f;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+            --shadow-md: 0 4px 16px rgba(0,0,0,.08), 0 2px 4px rgba(0,0,0,.04);
+            --shadow-lg: 0 10px 40px rgba(0,0,0,.12), 0 4px 8px rgba(0,0,0,.06);
+            --radius:    12px;
+            --radius-lg: 20px;
+        }
+
+        *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+        html{scroll-behavior:smooth}
+        body{font-family:'DM Sans',sans-serif;background:var(--surface);color:var(--ink);min-height:100vh;overflow-x:hidden}
+
+        .fade-in{animation:fadeIn .4s ease both}
+        @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+        .slide-in{animation:slideIn .35s cubic-bezier(.16,1,.3,1) both}
+        @keyframes slideIn{from{opacity:0;transform:translateX(-16px)}to{opacity:1;transform:none}}
+
+        /* AUTH */
+        #auth-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:var(--ink);position:relative;overflow:hidden}
+        #auth-screen::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 60% 20%,rgba(184,134,11,.15),transparent),radial-gradient(ellipse 50% 80% at 10% 80%,rgba(26,58,92,.3),transparent)}
+        .auth-grid{display:grid;grid-template-columns:1fr 1fr;max-width:960px;width:100%;margin:2rem;border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow-lg);position:relative;z-index:1}
+        .auth-brand{background:linear-gradient(145deg,#0d1117 0%,#1a2740 60%,#0f2027 100%);padding:3rem;display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden}
+        .auth-brand::after{content:'';position:absolute;width:300px;height:300px;background:radial-gradient(circle,rgba(184,134,11,.2),transparent 70%);bottom:-80px;right:-80px;border-radius:50%}
+        .brand-mark{font-family:'DM Serif Display',serif;font-size:2.4rem;color:#fff;letter-spacing:-.02em}
+        .brand-mark span{color:var(--gold-light)}
+        .brand-tagline{color:#8899aa;font-size:.85rem;margin-top:.3rem;font-weight:300;letter-spacing:.04em;text-transform:uppercase}
+        .brand-features{list-style:none;margin-top:auto}
+        .brand-features li{color:#aab8c8;font-size:.82rem;padding:.4rem 0;display:flex;align-items:center;gap:.6rem;border-bottom:1px solid rgba(255,255,255,.05)}
+        .brand-features li::before{content:'✦';color:var(--gold);font-size:.6rem}
+        .auth-form-wrap{background:var(--panel);padding:2.8rem 2.4rem;display:flex;flex-direction:column;justify-content:center}
+        .auth-tabs{display:flex;gap:0;margin-bottom:2rem;border-bottom:2px solid var(--border)}
+        .auth-tab{padding:.6rem 1.2rem;font-size:.88rem;font-weight:500;color:var(--ink-muted);cursor:pointer;border:none;background:none;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .2s}
+        .auth-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+        .form-title{font-family:'DM Serif Display',serif;font-size:1.6rem;color:var(--ink);margin-bottom:.3rem}
+        .form-subtitle{color:var(--ink-faint);font-size:.83rem;margin-bottom:1.6rem}
+        .field{margin-bottom:1rem}
+        .field label{display:block;font-size:.78rem;font-weight:500;color:var(--ink-muted);margin-bottom:.35rem;letter-spacing:.02em;text-transform:uppercase}
+        .field input{width:100%;padding:.65rem .85rem;border:1.5px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:.9rem;color:var(--ink);background:#faf9f7;transition:border-color .2s,box-shadow .2s;outline:none}
+        .field input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(26,58,92,.08);background:#fff}
+        .field-row{display:grid;grid-template-columns:1fr 1fr;gap:.8rem}
+        .btn-primary{width:100%;padding:.75rem;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:.9rem;font-weight:600;cursor:pointer;transition:background .2s,transform .1s,box-shadow .2s;font-family:'DM Sans',sans-serif}
+        .btn-primary:hover{background:#1e4a7a;box-shadow:0 4px 12px rgba(26,58,92,.3)}
+        .btn-primary:active{transform:scale(.98)}
+        .btn-primary:disabled{opacity:.5;cursor:not-allowed}
+        .error-msg{background:#fff0ee;border:1px solid #fcc;color:var(--danger);padding:.6rem .8rem;border-radius:6px;font-size:.82rem;margin-bottom:.8rem}
+        .success-msg{background:#f0fdf4;border:1px solid #bbf7d0;color:var(--success);padding:.6rem .8rem;border-radius:6px;font-size:.82rem;margin-bottom:.8rem}
+
+        /* APP */
+        #app-screen{display:none;min-height:100vh;background:var(--surface)}
+        .topbar{background:var(--ink);color:#fff;padding:0 2rem;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+        .topbar-brand{font-family:'DM Serif Display',serif;font-size:1.3rem}
+        .topbar-brand span{color:var(--gold-light)}
+        .topbar-user{display:flex;align-items:center;gap:1rem}
+        .user-badge{background:rgba(255,255,255,.1);padding:.25rem .8rem;border-radius:99px;font-size:.78rem;display:flex;align-items:center;gap:.4rem}
+        .user-badge .role{background:var(--gold);color:#000;font-size:.65rem;font-weight:700;padding:.1rem .4rem;border-radius:99px;text-transform:uppercase}
+        .btn-logout{background:none;border:1px solid rgba(255,255,255,.2);color:#aab;padding:.3rem .8rem;border-radius:6px;font-size:.78rem;cursor:pointer;transition:all .2s}
+        .btn-logout:hover{border-color:#fff;color:#fff}
+        .app-layout{display:grid;grid-template-columns:220px 1fr;min-height:calc(100vh - 60px)}
+        .sidebar{background:var(--panel);border-right:1px solid var(--border);padding:1.5rem 0}
+        .sidebar-nav a{display:flex;align-items:center;gap:.7rem;padding:.65rem 1.4rem;color:var(--ink-muted);text-decoration:none;font-size:.875rem;font-weight:500;transition:all .2s;cursor:pointer;border-left:3px solid transparent}
+        .sidebar-nav a:hover{color:var(--ink);background:#f0eee8}
+        .sidebar-nav a.active{color:var(--accent);background:rgba(26,58,92,.06);border-left-color:var(--accent)}
+        .sidebar-nav a .nav-icon{font-size:1rem;width:20px;text-align:center}
+        .sidebar-section{padding:.4rem 1.4rem;font-size:.7rem;font-weight:700;letter-spacing:.08em;color:var(--ink-faint);text-transform:uppercase;margin-top:1rem}
+        .main-content{padding:2rem;overflow-y:auto;max-height:calc(100vh - 60px)}
+        .page{display:none}
+        .page.active{display:block}
+
+        /* DASHBOARD */
+        .page-header{margin-bottom:1.8rem}
+        .page-header h1{font-family:'DM Serif Display',serif;font-size:1.8rem;color:var(--ink)}
+        .page-header p{color:var(--ink-muted);font-size:.88rem;margin-top:.25rem}
+        .stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.2rem;margin-bottom:2rem}
+        .stat-card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:1.4rem;position:relative;overflow:hidden}
+        .stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+        .stat-card.gold::before{background:linear-gradient(90deg,var(--gold),var(--gold-light))}
+        .stat-card.green::before{background:linear-gradient(90deg,#2d6a4f,#40916c)}
+        .stat-card.blue::before{background:linear-gradient(90deg,var(--accent),#2a6496)}
+        .stat-label{font-size:.75rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:.4rem}
+        .stat-value{font-family:'DM Serif Display',serif;font-size:2rem;color:var(--ink);line-height:1}
+        .stat-sub{font-size:.78rem;color:var(--ink-faint);margin-top:.3rem}
+        .stat-icon{position:absolute;right:1.2rem;top:1.2rem;font-size:1.5rem;opacity:.2}
+        .accounts-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1.2rem;margin-bottom:2rem}
+        .account-card{background:linear-gradient(135deg,var(--accent) 0%,#0d2137 100%);border-radius:var(--radius-lg);padding:1.6rem;color:#fff;position:relative;overflow:hidden;cursor:pointer;transition:transform .2s,box-shadow .2s}
+        .account-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-lg)}
+        .account-card::before{content:'';position:absolute;width:200px;height:200px;border-radius:50%;background:rgba(255,255,255,.05);top:-80px;right:-60px}
+        .account-card::after{content:'';position:absolute;width:120px;height:120px;border-radius:50%;background:rgba(184,134,11,.2);bottom:-40px;left:-30px}
+        .card-type{font-size:.7rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;opacity:.6;margin-bottom:.8rem}
+        .card-balance{font-family:'DM Serif Display',serif;font-size:2.2rem;margin-bottom:.3rem}
+        .card-number{font-family:'DM Mono',monospace;font-size:.82rem;opacity:.5;margin-bottom:.8rem}
+        .card-currency{display:inline-block;background:rgba(184,134,11,.3);border:1px solid rgba(184,134,11,.5);padding:.1rem .5rem;border-radius:99px;font-size:.7rem;font-weight:600;color:var(--gold-light)}
+
+        /* FORMS */
+        .form-card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:2rem;max-width:560px}
+        .form-card h2{font-family:'DM Serif Display',serif;font-size:1.4rem;margin-bottom:.4rem}
+        .form-card .subtitle{color:var(--ink-faint);font-size:.84rem;margin-bottom:1.6rem}
+        .form-section-label{font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-faint);padding-bottom:.5rem;margin-bottom:.8rem;border-bottom:1px solid var(--border)}
+        select{width:100%;padding:.65rem .85rem;border:1.5px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:.9rem;color:var(--ink);background:#faf9f7;outline:none;cursor:pointer}
+        select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(26,58,92,.08)}
+        .amount-field{position:relative}
+        .amount-prefix{position:absolute;left:.85rem;top:50%;transform:translateY(-50%);font-size:.9rem;color:var(--ink-muted);font-weight:500;pointer-events:none}
+        .amount-field input{padding-left:2rem}
+        .fraud-warning{background:#fffbeb;border:1px solid #f6e05e;border-radius:8px;padding:.9rem 1rem;margin-top:1rem;display:flex;align-items:flex-start;gap:.7rem}
+        .fraud-warning .icon{font-size:1.1rem}
+        .fraud-warning p{font-size:.82rem;color:var(--warning)}
+
+        /* TABLES */
+        .history-controls{display:flex;align-items:center;gap:1rem;margin-bottom:1.4rem}
+        .history-controls select{width:auto;min-width:180px}
+        .txn-table-wrap{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+        .txn-table{width:100%;border-collapse:collapse}
+        .txn-table th{background:#f5f3ef;padding:.7rem 1rem;text-align:left;font-size:.72rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-faint);border-bottom:1px solid var(--border)}
+        .txn-table td{padding:.9rem 1rem;border-bottom:1px solid #f0ede8;font-size:.88rem;vertical-align:middle}
+        .txn-table tr:last-child td{border-bottom:none}
+        .txn-table tr:hover td{background:#faf9f7}
+        .badge{display:inline-block;padding:.2rem .6rem;border-radius:99px;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+        .badge-success{background:#dcfce7;color:#166534}
+        .badge-pending{background:#fef9c3;color:#854d0e}
+        .badge-flagged{background:#fee2e2;color:#991b1b}
+        .badge-failed{background:#f1f5f9;color:#475569}
+        .amount-credit{color:var(--success);font-weight:600;font-family:'DM Mono',monospace}
+        .amount-debit{color:var(--danger);font-weight:600;font-family:'DM Mono',monospace}
+        .amount-neutral{font-family:'DM Mono',monospace;color:var(--ink-muted)}
+        .ref-code{font-family:'DM Mono',monospace;font-size:.75rem;color:var(--ink-faint)}
+        .fraud-indicator{display:inline-flex;align-items:center;gap:.25rem;font-size:.7rem;color:var(--danger);background:#fee2e2;padding:.15rem .5rem;border-radius:99px}
+
+        /* SECURITY */
+        .security-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;margin-bottom:1.5rem}
+        .security-card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:1.4rem}
+        .security-card h3{font-size:.95rem;font-weight:600;margin-bottom:.3rem;display:flex;align-items:center;gap:.5rem}
+        .security-card p{font-size:.82rem;color:var(--ink-muted);line-height:1.5}
+        .security-item{display:flex;justify-content:space-between;align-items:center;padding:.65rem 0;border-bottom:1px solid #f0ede8;font-size:.85rem}
+        .security-item:last-child{border-bottom:none}
+        .security-item .label{color:var(--ink-muted)}
+        .security-item .value{font-weight:500;font-family:'DM Mono',monospace;font-size:.8rem}
+        .status-dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:.4rem}
+        .status-green{background:#22c55e}
+        .status-yellow{background:#eab308}
+        .status-red{background:#ef4444}
+        .enc-demo{background:#0a0c0f;border-radius:8px;padding:1rem;margin-top:.8rem;font-family:'DM Mono',monospace;font-size:.75rem;color:#4ade80;line-height:1.8;overflow:auto;max-height:120px}
+        .enc-key{color:#60a5fa}
+        .enc-iv{color:#f59e0b}
+        .enc-ct{color:#a78bfa;word-break:break-all}
+
+        /* ADMIN */
+        .admin-section{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:1.4rem;margin-bottom:1.4rem}
+        .admin-section h2{font-family:'DM Serif Display',serif;font-size:1.2rem;margin-bottom:1rem;display:flex;align-items:center;gap:.5rem}
+        .fraud-alert-row{display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:1rem;align-items:center;padding:.9rem 1rem;border-bottom:1px solid #f0ede8;font-size:.85rem}
+        .fraud-alert-row:last-child{border-bottom:none}
+        .fraud-score-bar{height:6px;border-radius:3px;background:#fee2e2;overflow:hidden;margin-top:.3rem}
+        .fraud-score-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,#f97316,var(--danger))}
+        .btn-sm{padding:.3rem .8rem;border-radius:6px;font-size:.78rem;font-weight:600;cursor:pointer;border:none;transition:all .2s;font-family:'DM Sans',sans-serif}
+        .btn-clear{background:#dcfce7;color:#166534}
+        .btn-clear:hover{background:#bbf7d0}
+        .btn-danger{background:#fee2e2;color:#991b1b}
+        .btn-danger:hover{background:#fecaca}
+
+        /* TOAST */
+        #toast-container{position:fixed;top:1.5rem;right:1.5rem;z-index:9999;display:flex;flex-direction:column;gap:.6rem}
+        .toast{background:var(--ink);color:#fff;padding:.8rem 1.2rem;border-radius:10px;font-size:.85rem;min-width:260px;max-width:360px;box-shadow:0 8px 24px rgba(0,0,0,.2);border-left:3px solid var(--gold);animation:toastIn .3s cubic-bezier(.16,1,.3,1);display:flex;align-items:center;gap:.6rem}
+        .toast.success{border-left-color:#22c55e}
+        .toast.error{border-left-color:var(--danger)}
+        .toast.warning{border-left-color:#f59e0b}
+        @keyframes toastIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:none}}
+        .spinner{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite}
+        @keyframes spin{to{transform:rotate(360deg)}}
+
+        /* Loading overlay */
+        .loading-overlay{position:fixed;inset:0;background:rgba(10,12,15,.7);z-index:9998;display:flex;align-items:center;justify-content:center;display:none}
+        .loading-overlay.visible{display:flex}
+        .loading-box{background:var(--ink);color:#fff;padding:1.5rem 2rem;border-radius:var(--radius);display:flex;align-items:center;gap:1rem;font-size:.9rem}
+
+        @media(max-width:900px){
+            .auth-grid{grid-template-columns:1fr}.auth-brand{display:none}
+            .app-layout{grid-template-columns:1fr}.sidebar{display:none}
+            .stats-grid{grid-template-columns:1fr 1fr}
+            .security-grid{grid-template-columns:1fr}
+        }
+    </style>
+</head>
+<body>
+
+<div id="toast-container"></div>
+<div class="loading-overlay" id="loading-overlay">
+    <div class="loading-box"><span class="spinner"></span> Loading…</div>
+</div>
+
+<!-- ═══ AUTH ═══ -->
+<div id="auth-screen">
+    <div class="auth-grid fade-in">
+        <div class="auth-brand">
+            <div>
+                <div class="brand-mark">Vault<span>X</span></div>
+                <div class="brand-tagline">Enterprise Secure Banking</div>
+            </div>
+            <ul class="brand-features" style="margin-top:3rem">
+                <li>JWT token authentication</li>
+                <li>BCrypt password hashing (cost 12)</li>
+                <li>AES-256-GCM transaction encryption</li>
+                <li>ML-powered fraud detection engine</li>
+                <li>Role-based access control (RBAC)</li>
+                <li>Full immutable audit trail</li>
+            </ul>
+        </div>
+        <div class="auth-form-wrap">
+            <div class="auth-tabs">
+                <button class="auth-tab active" onclick="switchTab('login')">Sign In</button>
+                <button class="auth-tab" onclick="switchTab('register')">Create Account</button>
+            </div>
+
+            <!-- Login -->
+            <div id="login-form">
+                <div class="form-title">Welcome back</div>
+                <div class="form-subtitle">Sign in to access your secure vault</div>
+                <div id="login-error"></div>
+                <div class="field"><label>Username or Email</label><input type="text" id="login-user" placeholder="john" autocomplete="username"/></div>
+                <div class="field"><label>Password</label><input type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password"/></div>
+                <button class="btn-primary" onclick="doLogin()" id="login-btn">Sign In</button>
+            </div>
+
+            <!-- Register -->
+            <div id="register-form" style="display:none">
+                <div class="form-title">Open your account</div>
+                <div class="form-subtitle">Join VaultX — zero fees, maximum security</div>
+                <div id="register-error"></div>
+                <div class="field-row">
+                    <div class="field"><label>Username</label><input type="text" id="reg-username" placeholder="johndoe"/></div>
+                    <div class="field"><label>Full Name</label><input type="text" id="reg-name" placeholder="John Doe"/></div>
+                </div>
+                <div class="field"><label>Email</label><input type="email" id="reg-email" placeholder="john@example.com"/></div>
+                <div class="field"><label>Password</label><input type="password" id="reg-pass" placeholder="Min 8 chars, upper+lower+digit+special"/></div>
+                <div class="field"><label>Phone</label><input type="tel" id="reg-phone" placeholder="+1 555 000 0000"/></div>
+                <button class="btn-primary" onclick="doRegister()" id="reg-btn">Create Account</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ APP ═══ -->
+<div id="app-screen">
+    <div class="topbar">
+        <div class="topbar-brand">Vault<span>X</span></div>
+        <div class="topbar-user">
+            <div class="user-badge">
+                <span id="topbar-username">—</span>
+                <span class="role" id="topbar-role">USER</span>
+            </div>
+            <button class="btn-logout" onclick="doLogout()">Logout</button>
+        </div>
+    </div>
+
+    <div class="app-layout">
+        <nav class="sidebar">
+            <div class="sidebar-nav">
+                <div class="sidebar-section">Banking</div>
+                <a class="active" onclick="showPage('dashboard')"><span class="nav-icon">◈</span> Dashboard</a>
+                <a onclick="showPage('accounts')"><span class="nav-icon">◉</span> Accounts</a>
+                <a onclick="showPage('transfer')"><span class="nav-icon">⇄</span> Transfer</a>
+                <a onclick="showPage('deposit')"><span class="nav-icon">↓</span> Deposit</a>
+                <a onclick="showPage('history')"><span class="nav-icon">≡</span> History</a>
+                <div class="sidebar-section">Security</div>
+                <a onclick="showPage('security')"><span class="nav-icon">⚿</span> Security Center</a>
+                <div id="admin-nav" style="display:none">
+                    <div class="sidebar-section">Admin</div>
+                    <a onclick="showPage('admin')"><span class="nav-icon">⚙</span> Admin Panel</a>
+                </div>
+            </div>
+        </nav>
+
+        <main class="main-content">
+
+            <!-- DASHBOARD -->
+            <div class="page active" id="page-dashboard">
+                <div class="page-header">
+                    <h1>Dashboard</h1>
+                    <p id="dashboard-greeting">Here's your financial overview.</p>
+                </div>
+                <div class="stats-grid">
+                    <div class="stat-card gold fade-in">
+                        <div class="stat-label">Total Balance</div>
+                        <div class="stat-value" id="stat-balance">$0.00</div>
+                        <div class="stat-sub">Across all accounts</div>
+                        <div class="stat-icon">◈</div>
+                    </div>
+                    <div class="stat-card green fade-in" style="animation-delay:.05s">
+                        <div class="stat-label">Accounts</div>
+                        <div class="stat-value" id="stat-accounts">0</div>
+                        <div class="stat-sub">Active accounts</div>
+                        <div class="stat-icon">◉</div>
+                    </div>
+                    <div class="stat-card blue fade-in" style="animation-delay:.1s">
+                        <div class="stat-label">Transactions</div>
+                        <div class="stat-value" id="stat-txns">0</div>
+                        <div class="stat-sub">Total recorded</div>
+                        <div class="stat-icon">⇄</div>
+                    </div>
+                </div>
+                <h3 style="font-family:'DM Serif Display',serif;font-size:1.1rem;margin-bottom:1rem">Your Accounts</h3>
+                <div class="accounts-row" id="dashboard-accounts"><p style="color:var(--ink-faint);font-size:.88rem">Loading accounts…</p></div>
+                <h3 style="font-family:'DM Serif Display',serif;font-size:1.1rem;margin-bottom:1rem;margin-top:1.5rem">Recent Transactions</h3>
+                <div class="txn-table-wrap">
+                    <table class="txn-table">
+                        <thead><tr><th>Reference</th><th>Type</th><th>Amount</th><th>To / From</th><th>Status</th><th>Date</th></tr></thead>
+                        <tbody id="recent-txns"><tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--ink-faint)">No transactions yet</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ACCOUNTS -->
+            <div class="page" id="page-accounts">
+                <div class="page-header"><h1>Accounts</h1><p>Manage all your bank accounts</p></div>
+                <div style="margin-bottom:1.5rem">
+                    <button class="btn-primary" style="width:auto;padding:.6rem 1.4rem" onclick="openCreateAccount()">＋ Open New Account</button>
+                </div>
+                <div class="accounts-row" id="accounts-list"></div>
+            </div>
+
+            <!-- TRANSFER -->
+            <div class="page" id="page-transfer">
+                <div class="page-header"><h1>Transfer Funds</h1><p>Send money securely with AES-GCM encryption</p></div>
+                <div class="form-card fade-in">
+                    <h2>New Transfer</h2>
+                    <p class="subtitle">All transaction data is AES-256-GCM encrypted before storage.</p>
+                    <div id="transfer-msg"></div>
+                    <div class="form-section-label">Source</div>
+                    <div class="field"><label>From Account</label><select id="tx-source"></select></div>
+                    <div class="form-section-label">Destination</div>
+                    <div class="field"><label>Destination Account Number</label><input type="text" id="tx-dest" placeholder="1234567890123"/></div>
+                    <div class="form-section-label">Amount</div>
+                    <div class="field"><label>Amount (USD)</label>
+                        <div class="amount-field">
+                            <span class="amount-prefix">$</span>
+                            <input type="number" id="tx-amount" placeholder="0.00" min="0.01" step="0.01" oninput="updateFraudPreview()"/>
+                        </div>
+                    </div>
+                    <div class="field"><label>Description</label><input type="text" id="tx-desc" placeholder="e.g. Rent payment" maxlength="100"/></div>
+                    <div id="fraud-preview" style="display:none" class="fraud-warning">
+                        <span class="icon">⚠</span>
+                        <p>Large transaction detected. Fraud score will be computed before processing.</p>
+                    </div>
+                    <button class="btn-primary" style="margin-top:1.2rem" onclick="doTransfer()" id="tx-btn">Encrypt &amp; Transfer</button>
+                </div>
+            </div>
+
+            <!-- DEPOSIT -->
+            <div class="page" id="page-deposit">
+                <div class="page-header"><h1>Deposit Funds</h1><p>Add money to any of your accounts</p></div>
+                <div class="form-card fade-in">
+                    <h2>Make a Deposit</h2>
+                    <p class="subtitle">Funds are credited instantly and securely.</p>
+                    <div id="deposit-msg"></div>
+                    <div class="field"><label>Account</label><select id="dep-account"></select></div>
+                    <div class="field"><label>Amount (USD)</label>
+                        <div class="amount-field">
+                            <span class="amount-prefix">$</span>
+                            <input type="number" id="dep-amount" placeholder="0.00" min="0.01" step="0.01"/>
+                        </div>
+                    </div>
+                    <button class="btn-primary" style="margin-top:1.2rem" onclick="doDeposit()" id="dep-btn">Deposit Funds</button>
+                </div>
+            </div>
+
+            <!-- HISTORY -->
+            <div class="page" id="page-history">
+                <div class="page-header"><h1>Transaction History</h1><p>Complete encrypted transaction log</p></div>
+                <div class="history-controls">
+                    <select id="hist-account" onchange="loadHistory()"><option value="">Select Account</option></select>
+                    <span style="font-size:.8rem;color:var(--ink-faint)" id="hist-count"></span>
+                </div>
+                <div class="txn-table-wrap">
+                    <table class="txn-table">
+                        <thead><tr><th>Reference</th><th>Type</th><th>Amount</th><th>To / From</th><th>Balance After</th><th>Fraud Score</th><th>Status</th><th>Date</th></tr></thead>
+                        <tbody id="hist-tbody"><tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--ink-faint)">Select an account to view history</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- SECURITY CENTER -->
+            <div class="page" id="page-security">
+                <div class="page-header"><h1>Security Center</h1><p>Your account's security posture &amp; encryption status</p></div>
+                <div class="security-grid">
+                    <div class="security-card">
+                        <h3>🔐 Authentication</h3>
+                        <div class="security-item"><span class="label">Token Type</span><span class="value">JWT (HS256)</span></div>
+                        <div class="security-item"><span class="label">Token Expiry</span><span class="value">15 minutes</span></div>
+                        <div class="security-item"><span class="label">Refresh Token</span><span class="value">7 days</span></div>
+                        <div class="security-item"><span class="label">Password Hash</span><span class="value">BCrypt (cost 12)</span></div>
+                        <div class="security-item"><span class="label">Status</span><span class="value"><span class="status-dot status-green"></span>Active</span></div>
+                    </div>
+                    <div class="security-card">
+                        <h3>🔒 Transaction Encryption</h3>
+                        <div class="security-item"><span class="label">Algorithm</span><span class="value">AES-256-GCM</span></div>
+                        <div class="security-item"><span class="label">Key Exchange</span><span class="value">RSA-2048 OAEP</span></div>
+                        <div class="security-item"><span class="label">IV Length</span><span class="value">96 bits</span></div>
+                        <div class="security-item"><span class="label">Auth Tag</span><span class="value">128 bits</span></div>
+                        <div class="security-item"><span class="label">Storage</span><span class="value">Base64(IV ‖ CT ‖ Tag)</span></div>
+                    </div>
+                    <div class="security-card">
+                        <h3>🤖 Fraud Detection</h3>
+                        <div class="security-item"><span class="label">Engine</span><span class="value">Rule-based ML scoring</span></div>
+                        <div class="security-item"><span class="label">Large Txn (≥$10k)</span><span class="value">+0.30 score</span></div>
+                        <div class="security-item"><span class="label">Velocity (5+ /10min)</span><span class="value">+0.30 score</span></div>
+                        <div class="security-item"><span class="label">Daily Limit Breach</span><span class="value">+0.40 score</span></div>
+                        <div class="security-item"><span class="label">Block Threshold</span><span class="value" style="color:var(--danger)">≥ 0.70</span></div>
+                    </div>
+                    <div class="security-card">
+                        <h3>🛡️ Session Info</h3>
+                        <div class="security-item"><span class="label">User ID</span><span class="value" id="sec-userid">—</span></div>
+                        <div class="security-item"><span class="label">Username</span><span class="value" id="sec-username">—</span></div>
+                        <div class="security-item"><span class="label">Role</span><span class="value" id="sec-role">—</span></div>
+                        <div class="security-item"><span class="label">CSRF</span><span class="value"><span class="status-dot status-green"></span>Disabled (JWT)</span></div>
+                        <div class="security-item"><span class="label">Session</span><span class="value"><span class="status-dot status-green"></span>Stateless</span></div>
+                    </div>
+                </div>
+                <div class="security-card" style="margin-top:0">
+                    <h3>🔬 Live AES-GCM Encryption Demo</h3>
+                    <p style="font-size:.82rem;color:var(--ink-muted);margin-bottom:1rem">Enter text to see how transaction descriptions are encrypted in the database:</p>
+                    <div style="display:flex;gap:.8rem;align-items:center">
+                        <input type="text" id="enc-input" placeholder="e.g. Wire transfer to John" style="flex:1;padding:.6rem .85rem;border:1.5px solid var(--border);border-radius:8px;font-size:.88rem;outline:none"/>
+                        <button class="btn-primary" style="width:auto;padding:.6rem 1.2rem" onclick="runEncDemo()">Encrypt</button>
+                    </div>
+                    <div class="enc-demo" id="enc-output"><span style="color:#4b5563">// Output will appear here after encryption</span></div>
+                </div>
+            </div>
+
+            <!-- ADMIN -->
+            <div class="page" id="page-admin">
+                <div class="page-header"><h1>Admin Panel</h1><p>System management &amp; fraud oversight</p></div>
+                <div class="admin-section">
+                    <h2>⚠️ Flagged Transactions</h2>
+                    <div id="fraud-alerts-list"><p style="color:var(--ink-faint);font-size:.88rem">Loading…</p></div>
+                </div>
+                <div class="admin-section">
+                    <h2>👥 User Management</h2>
+                    <div class="txn-table-wrap">
+                        <table class="txn-table">
+                            <thead><tr><th>Username</th><th>Email</th><th>Full Name</th><th>Role</th><th>Status</th><th>Created</th><th>Action</th></tr></thead>
+                            <tbody id="admin-users"><tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--ink-faint)">Loading…</td></tr></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+</div>
+
+<script>
+    // ─── CONFIG ───────────────────────────────────────────────────────────────────
+    const API = 'http://localhost:8080/api/v1';
+
+    // ─── STATE ────────────────────────────────────────────────────────────────────
+    let state = {
+        accessToken: null,
+        refreshToken: null,
+        user: null,
+        accounts: []
+    };
+
+    // ─── HTTP HELPER ──────────────────────────────────────────────────────────────
+    async function http(method, path, body = null, auth = true) {
+        const headers = { 'Content-Type': 'application/json' };
+        if (auth && state.accessToken) {
+            headers['Authorization'] = 'Bearer ' + state.accessToken;
+        }
+        const opts = { method, headers };
+        if (body) opts.body = JSON.stringify(body);
+
+        const res = await fetch(API + path, opts);
+
+        if (res.status === 204) return null;
+
+        const data = await res.json().catch(() => ({}));
+
+        if (!res.ok) {
+            const msg = data.message || data.error || 'Request failed';
+            throw new Error(msg);
+        }
+        return data;
+    }
+
+    // ─── AUTH ─────────────────────────────────────────────────────────────────────
+    function switchTab(tab) {
+        document.getElementById('login-form').style.display    = tab === 'login'    ? '' : 'none';
+        document.getElementById('register-form').style.display = tab === 'register' ? '' : 'none';
+        document.querySelectorAll('.auth-tab').forEach((t, i) =>
+            t.classList.toggle('active', tab === 'login' ? i === 0 : i === 1));
+    }
+
+    async function doLogin() {
+        const usernameOrEmail = document.getElementById('login-user').value.trim();
+        const password        = document.getElementById('login-pass').value;
+        const errEl           = document.getElementById('login-error');
+        errEl.innerHTML = '';
+
+        if (!usernameOrEmail || !password) {
+            errEl.innerHTML = '<div class="error-msg">Please fill in all fields.</div>';
+            return;
+        }
+
+        const btn = document.getElementById('login-btn');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner"></span>';
+
+        try {
+            const data = await http('POST', '/auth/login', { usernameOrEmail, password }, false);
+            applyAuthState(data);
+            await initApp();
+        } catch (e) {
+            errEl.innerHTML = `<div class="error-msg">${e.message}</div>`;
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = 'Sign In';
+        }
+    }
+
+    async function doRegister() {
+        const username    = document.getElementById('reg-username').value.trim();
+        const fullName    = document.getElementById('reg-name').value.trim();
+        const email       = document.getElementById('reg-email').value.trim();
+        const password    = document.getElementById('reg-pass').value;
+        const phoneNumber = document.getElementById('reg-phone').value.trim();
+        const errEl       = document.getElementById('register-error');
+        errEl.innerHTML = '';
+
+        if (!username || !fullName || !email || !password) {
+            errEl.innerHTML = '<div class="error-msg">Please fill in all required fields.</div>';
+            return;
+        }
+
+        const btn = document.getElementById('reg-btn');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner"></span>';
+
+        try {
+            const data = await http('POST', '/auth/register', { username, email, password, fullName, phoneNumber }, false);
+            applyAuthState(data);
+            errEl.innerHTML = '<div class="success-msg">Account created! Signing you in…</div>';
+            await delay(600);
+            await initApp();
+        } catch (e) {
+            errEl.innerHTML = `<div class="error-msg">${e.message}</div>`;
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = 'Create Account';
+        }
+    }
+
+    function applyAuthState(data) {
+        state.accessToken  = data.accessToken;
+        state.refreshToken = data.refreshToken;
+        state.user = {
+            id:       data.userId,
+            username: data.username,
+            email:    data.email,
+            fullName: data.fullName,
+            role:     data.role
+        };
+    }
+
+    async function doLogout() {
+        try { await http('POST', '/auth/logout'); } catch (_) {}
+        state = { accessToken: null, refreshToken: null, user: null, accounts: [] };
+        document.getElementById('app-screen').style.display  = 'none';
+        document.getElementById('auth-screen').style.display = 'flex';
+        toast('Signed out securely', 'success');
+    }
+
+    // ─── INIT APP ─────────────────────────────────────────────────────────────────
+    async function initApp() {
+        document.getElementById('auth-screen').style.display = 'none';
+        document.getElementById('app-screen').style.display  = 'block';
+
+        document.getElementById('topbar-username').textContent = state.user.username;
+        document.getElementById('topbar-role').textContent     = state.user.role;
+        document.getElementById('sec-userid').textContent      = state.user.id;
+        document.getElementById('sec-username').textContent    = state.user.username;
+        document.getElementById('sec-role').textContent        = state.user.role;
+
+        const hour = new Date().getHours();
+        const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+        document.getElementById('dashboard-greeting').textContent =
+            `${greeting}, ${state.user.fullName.split(' ')[0]}. Here's your financial overview.`;
+
+        if (state.user.role === 'ADMIN') {
+            document.getElementById('admin-nav').style.display = 'block';
+        }
+
+        showLoading(true);
+        try {
+            await loadAccounts();
+            await renderDashboard();
+            populateAccountSelects();
+        } finally {
+            showLoading(false);
+        }
+    }
+
+    // ─── ACCOUNTS ─────────────────────────────────────────────────────────────────
+    async function loadAccounts() {
+        state.accounts = await http('GET', '/accounts');
+    }
+
+    async function openCreateAccount() {
+        const types = ['CHECKING', 'SAVINGS', 'INVESTMENT'];
+        const type  = prompt('Account type:\nCHECKING, SAVINGS, or INVESTMENT')?.toUpperCase();
+        if (!type || !types.includes(type)) { toast('Invalid account type', 'warning'); return; }
+
+        showLoading(true);
+        try {
+            await http('POST', '/accounts', { accountType: type });
+            await loadAccounts();
+            populateAccountSelects();
+            renderAccountsPage();
+            renderDashboard();
+            toast(`${type} account created!`, 'success');
+        } catch (e) {
+            toast(e.message, 'error');
+        } finally {
+            showLoading(false);
+        }
+    }
+
+    // ─── DASHBOARD ────────────────────────────────────────────────────────────────
+    async function renderDashboard() {
+        const accs = state.accounts || [];
+        const totalBalance = accs.reduce((s, a) => s + parseFloat(a.balance), 0);
+
+        document.getElementById('stat-balance').textContent  = fmt(totalBalance);
+        document.getElementById('stat-accounts').textContent = accs.length;
+
+        // Account cards
+        document.getElementById('dashboard-accounts').innerHTML =
+            accs.length ? accs.map(renderAccountCard).join('') :
+                '<p style="color:var(--ink-faint);font-size:.88rem">No accounts yet. <a href="#" onclick="showPage(\'accounts\')" style="color:var(--accent)">Create one</a>.</p>';
+
+        // Recent txns — load from first account if available
+        let txnCount = 0;
+        if (accs.length > 0) {
+            try {
+                const firstAcc  = accs[0];
+                const page      = await http('GET', `/transactions/history/${firstAcc.id}?page=0&size=5`);
+                const txns      = page.content || [];
+                txnCount        = page.totalElements || 0;
+                document.getElementById('recent-txns').innerHTML = txns.length
+                    ? txns.map(renderTxnRow).join('')
+                    : '<tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--ink-faint)">No transactions yet</td></tr>';
+            } catch (_) {}
+        }
+        document.getElementById('stat-txns').textContent = txnCount;
+    }
+
+    function renderAccountCard(a) {
+        return `<div class="account-card" onclick="showPage('history');document.getElementById('hist-account').value='${a.id}';loadHistory()">
+    <div class="card-type">${a.accountType}</div>
+    <div class="card-balance">${fmt(a.balance)}</div>
+    <div class="card-number">${a.accountNumber}</div>
+    <span class="card-currency">${a.currencyCode}</span>
+    <div style="position:absolute;bottom:1.2rem;right:1.4rem;font-size:.72rem;opacity:.4;z-index:1">${a.status}</div>
+  </div>`;
+    }
+
+    function renderTxnRow(t) {
+        const isIn = t.type === 'DEPOSIT';
+        const amtClass  = isIn ? 'amount-credit' : t.type === 'WITHDRAWAL' ? 'amount-debit' : 'amount-neutral';
+        const amtPrefix = isIn ? '+' : t.type === 'WITHDRAWAL' ? '−' : '';
+        const statusBadge = {COMPLETED:'badge-success',PENDING:'badge-pending',FLAGGED:'badge-flagged',FAILED:'badge-failed'}[t.status] || 'badge-pending';
+        return `<tr>
+    <td><span class="ref-code">${t.referenceId}</span></td>
+    <td>${t.type}</td>
+    <td><span class="${amtClass}">${amtPrefix}${fmt(t.amount)}</span>
+        ${t.flagged ? `<br><span class="fraud-indicator">⚠ ${(t.fraudScore*100).toFixed(0)}%</span>` : ''}
+    </td>
+    <td style="font-size:.8rem;color:var(--ink-muted)">${t.destinationAccountNumber || t.sourceAccountNumber || '—'}</td>
+    <td><span class="badge ${statusBadge}">${t.status}</span></td>
+    <td style="font-size:.78rem;color:var(--ink-faint)">${fmtDate(t.createdAt)}</td>
+  </tr>`;
+    }
+
+    // ─── ACCOUNTS PAGE ────────────────────────────────────────────────────────────
+    function renderAccountsPage() {
+        const accs = state.accounts || [];
+        document.getElementById('accounts-list').innerHTML = accs.length
+            ? accs.map(renderAccountCard).join('')
+            : '<p style="color:var(--ink-faint)">No accounts yet.</p>';
+    }
+
+    // ─── TRANSFER ─────────────────────────────────────────────────────────────────
+    function updateFraudPreview() {
+        const amt = parseFloat(document.getElementById('tx-amount').value) || 0;
+        document.getElementById('fraud-preview').style.display = amt >= 10000 ? 'flex' : 'none';
+    }
+
+    async function doTransfer() {
+        const sourceAccountId          = document.getElementById('tx-source').value;
+        const destinationAccountNumber = document.getElementById('tx-dest').value.trim();
+        const amount                   = parseFloat(document.getElementById('tx-amount').value);
+        const description              = document.getElementById('tx-desc').value.trim() || 'Transfer';
+        const msgEl                    = document.getElementById('transfer-msg');
+        msgEl.innerHTML = '';
+
+        if (!sourceAccountId)        { msgEl.innerHTML = '<div class="error-msg">Select a source account.</div>'; return; }
+        if (!destinationAccountNumber){ msgEl.innerHTML = '<div class="error-msg">Enter destination account number.</div>'; return; }
+        if (!amount || amount <= 0)  { msgEl.innerHTML = '<div class="error-msg">Enter a valid amount.</div>'; return; }
+
+        const btn = document.getElementById('tx-btn');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner"></span> Encrypting &amp; processing…';
+
+        try {
+            const txn = await http('POST', '/transactions/transfer',
+                { sourceAccountId, destinationAccountNumber, amount, description });
+
+            msgEl.innerHTML = `<div class="success-msg">✓ Transfer of ${fmt(amount)} completed. Ref: ${txn.referenceId}</div>`;
+            toast('Transfer successful!', 'success');
+            await loadAccounts();
+            populateAccountSelects();
+            await renderDashboard();
+            document.getElementById('tx-amount').value = '';
+            document.getElementById('tx-dest').value   = '';
+            document.getElementById('tx-desc').value   = '';
+        } catch (e) {
+            const isBlocked = e.message.toLowerCase().includes('fraud') || e.message.toLowerCase().includes('blocked');
+            msgEl.innerHTML = `<div class="error-msg">${isBlocked ? '⚠️ ' : ''}${e.message}</div>`;
+            toast(e.message, 'error');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = 'Encrypt &amp; Transfer';
+        }
+    }
+
+    // ─── DEPOSIT ──────────────────────────────────────────────────────────────────
+    async function doDeposit() {
+        const accountId = document.getElementById('dep-account').value;
+        const amount    = parseFloat(document.getElementById('dep-amount').value);
+        const msgEl     = document.getElementById('deposit-msg');
+        msgEl.innerHTML = '';
+
+        if (!accountId)           { msgEl.innerHTML = '<div class="error-msg">Select an account.</div>'; return; }
+        if (!amount || amount <= 0){ msgEl.innerHTML = '<div class="error-msg">Enter a valid amount.</div>'; return; }
+
+        const btn = document.getElementById('dep-btn');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner"></span>';
+
+        try {
+            await http('POST', '/transactions/deposit', { accountId, amount });
+
+            await loadAccounts();
+            populateAccountSelects();
+            await renderDashboard();
+
+            const acc = state.accounts.find(a => a.id === accountId);
+            msgEl.innerHTML = `<div class="success-msg">✓ ${fmt(amount)} deposited. New balance: ${acc ? fmt(acc.balance) : ''}</div>`;
+            toast('Deposit successful!', 'success');
+            document.getElementById('dep-amount').value = '';
+        } catch (e) {
+            msgEl.innerHTML = `<div class="error-msg">${e.message}</div>`;
+            toast(e.message, 'error');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = 'Deposit Funds';
+        }
+    }
+
+    // ─── HISTORY ──────────────────────────────────────────────────────────────────
+    async function loadHistory() {
+        const accId  = document.getElementById('hist-account').value;
+        const tbody  = document.getElementById('hist-tbody');
+        const countEl = document.getElementById('hist-count');
+
+        if (!accId) {
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--ink-faint)">Select an account</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--ink-faint)"><span class="spinner" style="border-top-color:var(--ink-muted);border-color:rgba(0,0,0,.15)"></span></td></tr>';
+
+        try {
+            const page = await http('GET', `/transactions/history/${accId}?page=0&size=50`);
+            const txns = page.content || [];
+            countEl.textContent = `${page.totalElements || txns.length} transactions`;
+
+            if (!txns.length) {
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--ink-faint)">No transactions</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = txns.map(t => {
+                const isIn = t.type === 'DEPOSIT';
+                const amtClass  = isIn ? 'amount-credit' : t.type === 'WITHDRAWAL' ? 'amount-debit' : 'amount-neutral';
+                const amtPrefix = isIn ? '+' : t.type === 'WITHDRAWAL' ? '−' : '';
+                const statusBadge = {COMPLETED:'badge-success',PENDING:'badge-pending',FLAGGED:'badge-flagged',FAILED:'badge-failed'}[t.status] || 'badge-pending';
+                const scoreColor  = t.fraudScore >= 0.7 ? 'var(--danger)' : t.fraudScore >= 0.5 ? 'var(--warning)' : 'var(--success)';
+                return `<tr>
+      <td><span class="ref-code">${t.referenceId}</span></td>
+      <td>${t.type}</td>
+      <td><span class="${amtClass}">${amtPrefix}${fmt(t.amount)}</span></td>
+      <td style="font-size:.8rem;color:var(--ink-muted)">${t.destinationAccountNumber || '—'}</td>
+      <td><span class="amount-neutral">${t.balanceAfter != null ? fmt(t.balanceAfter) : '—'}</span></td>
+      <td><span style="font-family:'DM Mono',monospace;font-size:.78rem;color:${scoreColor}">${(t.fraudScore * 100).toFixed(0)}%</span></td>
+      <td><span class="badge ${statusBadge}">${t.status}</span></td>
+      <td style="font-size:.78rem;color:var(--ink-faint)">${fmtDate(t.createdAt)}</td>
+    </tr>`;
+            }).join('');
+        } catch (e) {
+            tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--danger)">${e.message}</td></tr>`;
+        }
+    }
+
+    // ─── ADMIN ────────────────────────────────────────────────────────────────────
+    async function renderAdminPanel() {
+        // Users
+        const usersEl = document.getElementById('admin-users');
+        try {
+            const page  = await http('GET', '/admin/users?page=0&size=50');
+            const users = page.content || [];
+            usersEl.innerHTML = users.map(u => `
+    <tr>
+      <td><strong>${u.username}</strong></td>
+      <td style="font-size:.82rem;color:var(--ink-muted)">${u.email}</td>
+      <td style="font-size:.82rem">${u.fullName}</td>
+      <td><span class="badge ${u.role === 'ADMIN' ? 'badge-flagged' : 'badge-success'}">${u.role}</span></td>
+      <td>
+        ${u.locked
+                ? '<span style="color:var(--danger);font-size:.82rem">🔒 Locked</span>'
+                : '<span style="color:var(--success);font-size:.82rem">✓ Active</span>'}
+      </td>
+      <td style="font-size:.78rem;color:var(--ink-faint)">${fmtDate(u.createdAt)}</td>
+      <td><button class="btn-sm btn-danger" onclick="toggleLock('${u.id}')">Toggle Lock</button></td>
+    </tr>`).join('');
+        } catch (e) {
+            usersEl.innerHTML = `<tr><td colspan="7" style="color:var(--danger);padding:1rem">${e.message}</td></tr>`;
+        }
+
+        // Flagged transactions — check all accounts
+        const fraudEl = document.getElementById('fraud-alerts-list');
+        try {
+            const flaggedAll = [];
+            for (const acc of state.accounts) {
+                const page = await http('GET', `/transactions/history/${acc.id}?page=0&size=100`);
+                const flagged = (page.content || []).filter(t => t.flagged);
+                flaggedAll.push(...flagged);
+            }
+            fraudEl.innerHTML = flaggedAll.length
+                ? flaggedAll.map(t => `
+    <div class="fraud-alert-row">
+      <div><span class="ref-code">${t.referenceId}</span><br><span style="font-size:.75rem;color:var(--ink-faint)">${fmtDate(t.createdAt)}</span></div>
+      <div><strong>${fmt(t.amount)}</strong><br><span style="font-size:.75rem;color:var(--ink-faint)">${t.sourceAccountNumber}</span></div>
+      <div>
+        <span style="font-size:.8rem;color:var(--danger);font-weight:600">Score: ${(t.fraudScore * 100).toFixed(0)}%</span>
+        <div class="fraud-score-bar"><div class="fraud-score-fill" style="width:${t.fraudScore * 100}%"></div></div>
+      </div>
+      <span class="badge badge-flagged">FLAGGED</span>
+    </div>`).join('')
+                : '<p style="color:var(--ink-faint);font-size:.88rem;padding:.5rem 0">No flagged transactions.</p>';
+        } catch (e) {
+            fraudEl.innerHTML = `<p style="color:var(--danger)">${e.message}</p>`;
+        }
+    }
+
+    async function toggleLock(userId) {
+        try {
+            await http('PATCH', `/admin/users/${userId}/toggle-lock`);
+            toast('User lock status toggled', 'success');
+            renderAdminPanel();
+        } catch (e) {
+            toast(e.message, 'error');
+        }
+    }
+
+    // ─── AES-GCM DEMO ─────────────────────────────────────────────────────────────
+    async function aesEncryptDemo(text) {
+        const key = await crypto.subtle.generateKey({ name: 'AES-GCM', length: 256 }, true, ['encrypt', 'decrypt']);
+        const iv  = crypto.getRandomValues(new Uint8Array(12));
+        const enc = new TextEncoder();
+        const ct  = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, enc.encode(text));
+        const rawKey = await crypto.subtle.exportKey('raw', key);
+        return { key: bufToHex(rawKey), iv: bufToHex(iv), ct: bufToBase64(ct) };
+    }
+    function bufToHex(b)    { return [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, '0')).join('') }
+    function bufToBase64(b) { return btoa(String.fromCharCode(...new Uint8Array(b))) }
+
+    async function runEncDemo() {
+        const txt = document.getElementById('enc-input').value.trim();
+        if (!txt) { toast('Enter some text first', 'warning'); return; }
+        const out = document.getElementById('enc-output');
+        out.innerHTML = '<span style="color:#4b5563">Encrypting…</span>';
+        try {
+            const r = await aesEncryptDemo(txt);
+            out.innerHTML =
+                `<span class="enc-key">AES-Key:</span>  ${r.key.substring(0, 32)}…\n` +
+                `<span class="enc-iv">IV (96-bit):</span> ${r.iv}\n` +
+                `<span class="enc-ct">CipherText:</span> ${r.ct}\n\n` +
+                `<span style="color:#6b7280">// Stored in DB as Base64(IV ‖ CipherText ‖ GCM-Tag)</span>\n` +
+                `<span style="color:#6b7280">// Original: "${txt.substring(0, 40)}${txt.length > 40 ? '…' : ''}"</span>`;
+        } catch (e) {
+            out.innerHTML = `<span style="color:#f87171">Error: ${e.message}</span>`;
+        }
+    }
+
+    // ─── NAVIGATION ───────────────────────────────────────────────────────────────
+    function showPage(name) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.sidebar-nav a').forEach(a => a.classList.remove('active'));
+
+        const pageEl = document.getElementById('page-' + name);
+        if (pageEl) { pageEl.classList.add('active'); pageEl.classList.add('fade-in'); }
+
+        document.querySelectorAll('.sidebar-nav a').forEach(a => {
+            if (a.getAttribute('onclick') && a.getAttribute('onclick').includes("'" + name + "'"))
+                a.classList.add('active');
+        });
+
+        if (name === 'accounts') renderAccountsPage();
+        if (name === 'admin' && state.user?.role === 'ADMIN') renderAdminPanel();
+    }
+
+    function populateAccountSelects() {
+        const accs = state.accounts || [];
+        ['tx-source', 'dep-account', 'hist-account'].forEach(id => {
+            const sel = document.getElementById(id);
+            if (!sel) return;
+            const prev = sel.value;
+            sel.innerHTML = accs.map(a =>
+                `<option value="${a.id}">${a.accountType} — ${a.accountNumber} (${fmt(a.balance)})</option>`
+            ).join('');
+            if (prev) sel.value = prev;
+        });
+    }
+
+    // ─── HELPERS ──────────────────────────────────────────────────────────────────
+    function fmt(n)     { return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(n || 0) }
+    function fmtDate(d) { return d ? new Date(d).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—' }
+    function delay(ms)  { return new Promise(r => setTimeout(r, ms)) }
+
+    function showLoading(v) {
+        document.getElementById('loading-overlay').classList.toggle('visible', v);
+    }
+
+    function toast(msg, type = 'success') {
+        const c  = document.getElementById('toast-container');
+        const el = document.createElement('div');
+        el.className = `toast ${type}`;
+        const icon = { success: '✓', error: '✗', warning: '⚠' }[type] || 'ℹ';
+        el.innerHTML = `<span>${icon}</span><span>${msg}</span>`;
+        c.appendChild(el);
+        setTimeout(() => { el.style.opacity = '0'; el.style.transition = 'opacity .3s'; setTimeout(() => el.remove(), 300); }, 3500);
+    }
+
+    // Enter key on login
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Enter') {
+            const loginForm = document.getElementById('login-form');
+            if (loginForm.style.display !== 'none') doLogin();
+        }
+    });
+</script>
+</body>
+</html>
