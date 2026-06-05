@@ -3,28 +3,27 @@ spring:
     name: secure-banking-system
 
   datasource:
-    url: jdbc:h2:file:./bankdata;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
-    username: SA
-    password:
+    url: ${DATABASE_URL:jdbc:h2:file:./bankdata;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE}
+    username: ${DB_USERNAME:SA}
+    password: ${DB_PASSWORD:}
+    driver-class-name: ${DB_DRIVER:org.h2.Driver}
 
   h2:
     console:
       enabled: true
       path: /h2-console
-      settings:
-        web-allow-others: false
 
   jpa:
     hibernate:
       ddl-auto: update
-    show-sql: true
+    show-sql: false
     open-in-view: false
     properties:
       hibernate:
-        format_sql: true
+        format_sql: false
 
-server:
-  port: 8080
+  server:
+    port: ${PORT:8080}
 
 app:
   jwt:
@@ -43,9 +42,9 @@ app:
     lockout-duration-minutes: 30
 
   cors:
-    allowed-origins: ${CORS_ORIGINS:http://localhost:3000,http://localhost:5173}
+    allowed-origins: ${CORS_ORIGINS:*}
 
 logging:
   level:
-    com.securebank: DEBUG
-    org.springframework.security: INFO
+    com.securebank: INFO
+    org.springframework.security: WARN
