@@ -1,0 +1,18 @@
+Hostname
+An internal hostname used by your Render services.
+dpg-d98udkjeo5us73fpiumg-a
+
+Port
+5432
+
+Database
+secure_banking_db
+
+Username
+secure_banking_db_user
+
+Password
+yr1C8zrpG1V1kkg8HdGXAyCnbX2z8xHc
+
+
+Internal Database URL
