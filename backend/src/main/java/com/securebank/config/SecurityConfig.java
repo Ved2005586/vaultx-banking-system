@@ -21,6 +21,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import java.util.Arrays;
 import java.util.List;
 
 @Configuration
@@ -39,6 +40,8 @@ public class SecurityConfig {
 
         http.csrf(csrf -> csrf.disable());
 
+        http.cors(cors -> cors.configurationSource(corsConfigurationSource()));
+
         // Allow H2 console frames
         http.headers(h -> h.frameOptions(f -> f.sameOrigin()));
 
@@ -52,13 +55,16 @@ public class SecurityConfig {
                         "/*.html",
                         "/*.js",
                         "/*.css",
+                        "/favicon.ico",
                         "/assets/**",
+                        "/api/auth/**",
                         "/api/v1/auth/**",
                         "/h2-console/**",
                         "/actuator/health"
                 ).permitAll()
                 .anyRequest().authenticated()
         );
+
         http.authenticationProvider(authenticationProvider());
 
         http.addFilterBefore(jwtAuthFilter,
@@ -89,12 +95,16 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of(allowedOrigins.split(",")));
-        config.setAllowedMethods(List.of("*"));
-        config.setAllowedHeaders(List.of("*"));
 
-        UrlBasedCorsConfigurationSource source =
-                new UrlBasedCorsConfigurationSource();
+        List<String> origins = Arrays.asList(allowedOrigins.split(","));
+        config.setAllowedOrigins(origins);
+
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+        config.setAllowedHeaders(List.of("*"));
+        config.setAllowCredentials(false);
+        config.setMaxAge(3600L);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
         return source;
     }
